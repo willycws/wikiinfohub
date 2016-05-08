@@ -22,7 +22,7 @@ This is an NodeJs and npm project that extract the Wikipedia Infobox section int
 6. Launch a browser and test the api. Usage: http://localhost:8080/wikiinfobox?title=<Wiki page title>&language=en
 7. Example: http://localhost:8080/wikiinfobox?title=iPhone 6&language=en
 
-#####Links
+#####References
 - http://blog.modulus.io/build-your-first-http-server-in-nodejs
 - https://www.npmjs.com/package/wiki-infobox
 - https://nodejs.org/api/url.html
