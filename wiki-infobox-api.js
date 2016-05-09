@@ -36,16 +36,19 @@ dispatcher.onGet("/wikiinfobox", function(req, res) {
 	title = replaceAll(title,"%20", " ").replace("/","");
 
 	language = queryList[1].split("=")[1];
-
+	console.log(title + ":" + language)
 	infobox(title, language, function(err, data){    
 		if (err) {
-    			// Oh no! Something goes wrong! 
-		    return;
-  		}
- 		res.setHeader('Content-Type', 'application/json');
-    		res.write(JSON.stringify(data));  
-		res.end();  	
-		return;
+    			res.write("[Error: No infobox found!]");  
+			res.end();  	
+		    	return;
+  		}else{
+			res.setHeader('Content-Type', 'application/json');
+    			res.write(JSON.stringify(data));  
+			res.end();  	
+			return;
+		}
+ 		
   		//console.log(data);
 	});	
 });
