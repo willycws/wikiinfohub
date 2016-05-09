@@ -1,6 +1,6 @@
 # WIKIINFOHUB
 
-This is an NodeJs and npm project that extract the Wikipedia Infobox section into an JSON format. It is wrap as a web service call for any GET request from browser or application. You can test this API at https://wikiinfobox-c1871803.c9users.io/wikiinfobox?title=<Wikipedia Title>&language=en
+This is an NodeJs and npm project that extract the Wikipedia Infobox section into an JSON format. It is wrap as a web service call for any GET request from browser or application. You can test this API at https://wikiinfobox-c1871803.c9users.io/wikiinfobox?title=iPhone 6&language=en
 
 #####Setup Nodejs and npm
 1. sudo apt-get install nodejs
