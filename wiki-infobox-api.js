@@ -784,7 +784,11 @@ dispatcher.onGet("/findontology", function(req, res) {
 	title = replaceAll(title,"%20", " ").replace("/","");
 
 	ontologyToMatched = queryList[1].split("=")[1];
-
+	if (ontologyToMatched != null){
+		ontologyToMatched = replaceAll(ontologyToMatched,"%20", " ").toLowerCase();
+		ontologyToMatched = ontologyToMatched.split(",");
+	}
+	
 	//delete the file if it exists
 	fs.exists(fileEntityID, function(exists) {
 	  if(exists) {
@@ -1074,6 +1078,7 @@ dispatcher.onGet("/findontology", function(req, res) {
 	    					var splited;
 	    					var last_entity_string;
 	    					var last_entity;
+	    					var ontologyRequestedFound = false;		
 	    							
 	    					checkForUnCompletedOntologyChain(0);
 	    					function checkForUnCompletedOntologyChain(x){
@@ -1113,6 +1118,14 @@ dispatcher.onGet("/findontology", function(req, res) {
 	    										scanForSubstring(d+1, last_entity_string, resultChain);
 	    									}else{
 	    										//console.log(resultChain);
+	    										//check whether there is an ontology to match the result chain
+	    										if (ontologyToMatched != null){
+	    											ontologyRequestedFound = ontologyToFind(0,ontologyToMatched,resultChain);
+	    											 //if (resultChain.indexOf(ontologyToMatched) > -1){
+	    											 //	ontologyRequestedFound = true;
+	    											 //	checkForUnCompletedOntologyChain(99999);//exit the search as an ontology to match has been found
+	    											 //}
+	    										}
 	    										newResult.push(resultChain);
 	    										checkForUnCompletedOntologyChain(x+1);
 	    									}
@@ -1120,6 +1133,14 @@ dispatcher.onGet("/findontology", function(req, res) {
 	    									
     								}else{
     									//console.log(resultChain);
+    									//check whether there is an ontology to match the result chain
+										if (ontologyToMatched != null){
+											ontologyRequestedFound = ontologyToFind(0,ontologyToMatched,resultChain);
+											 //if (resultChain.indexOf(ontologyToMatched) > -1){
+											 //	ontologyRequestedFound = true;
+											 //	checkForUnCompletedOntologyChain(99999);//exit the search as an ontology to match has been found
+											 //}
+										}
     									//add the chain to the newResult array
     									newResult.push(resultChain);
     									checkForUnCompletedOntologyChain(x+1);
@@ -1128,9 +1149,19 @@ dispatcher.onGet("/findontology", function(req, res) {
 	    							
 	    						}else{
 	    							console.log("Returned result in response.");
-			    					res.setHeader('Content-Type', 'application/json');
-    								res.write(JSON.stringify(newResult));  
-									res.end();  	
+	    							if (ontologyRequestedFound == true){
+	    								res.setHeader('Content-Type', 'application/json');
+    									res.write(JSON.stringify(true));  
+										res.end();  
+	    							}else{
+	    								res.setHeader('Content-Type', 'application/json');
+	    								if (ontologyToMatched != null){
+	    									res.write(JSON.stringify(false));  
+	    								}else{
+	    									res.write(JSON.stringify(newResult)); 
+	    								}
+										res.end();  
+	    							}
 			    					return;
 	    						}
 	    					}
@@ -1534,6 +1565,21 @@ dispatcher.onGet("/wikiinfobox", function(req, res) {
 
 function replaceAll(str, find, replace) {
   return str.replace(new RegExp(find, 'g'), replace);
+}
+
+//find the ontology to match on the result
+function ontologyToFind(x,ontologyToMatched,stringToFind){
+	// console.log("x is "+ x+"-"+stringToFind);
+	if (x < ontologyToMatched.length){
+		if (stringToFind.indexOf(ontologyToMatched[x]) > -1){
+			return true;
+		 	//ontologyToFind(99999,"","");//exit the search as an ontology to match has been found
+		}else{
+			ontologyToFind(x+1,ontologyToMatched,stringToFind);
+		}
+	}else{
+		return false;
+	}
 }
 
 //Create a server
