@@ -832,22 +832,30 @@ dispatcher.onGet("/findontology", function(req, res) {
 					p31_section = p31_section[entityKey].claims;
 					p31_section = p31_section['P31'];
 					
-					for(var i = 0; i < p31_section.length; i++) {
-						var obj = p31_section[i];
-						obj = obj.mainsnak.datavalue.value;
-						var entityID = JSON.stringify(obj['numeric-id']);
-						if (entityID.indexOf("Q") < 0){
-							entityID = "Q" + entityID;
+					if (p31_section != null){
+						for(var i = 0; i < p31_section.length; i++) {
+							var obj = p31_section[i];
+							obj = obj.mainsnak.datavalue.value;
+							var entityID = JSON.stringify(obj['numeric-id']);
+							if (entityID.indexOf("Q") < 0){
+								entityID = "Q" + entityID;
+							}
+							entityID_list.push(entityID+","+entityID);
+							P31_EntityID.push(entityID);
+							hashtable.put(entityID,entityID);//add to track processed numeric id
+							//create a the P31 entity as root node
+							node = tree.parse({id: entityID});
+							hashtableTreeNodes.put(entityID,node);
+							
 						}
-						entityID_list.push(entityID+","+entityID);
-						P31_EntityID.push(entityID);
-						hashtable.put(entityID,entityID);//add to track processed numeric id
-						//create a the P31 entity as root node
-						node = tree.parse({id: entityID});
-						hashtableTreeNodes.put(entityID,node);
-						
+						searchOntology(2);//call the next section
+					}else{
+						//no ontology found for this title
+						res.setHeader('Content-Type', 'application/json');
+						res.write(JSON.stringify(false));  
+						res.end();  
 					}
-					searchOntology(2);//call the next section
+					
 				}//end if i == 0
 				//read in the processed entity id file and add to the hashtable
 				else if (a == 1)
