@@ -2,7 +2,7 @@
 
 This is an NodeJs and npm project that extract the Wikipedia Infobox section into an JSON format. It is wrap as a web service call for any GET request from browser or application. You can test this API at https://wikiinfobox-c1871803.c9users.io/wikiinfobox?title=iPhone%206&language=en
 
-**https://wikiinfobox-c1871803.c9users.io/findontology?title=Samsung&ontology=organization,business enterprise,family business,public company, company
+**https://wikiinfobox-c1871803.c9users.io/findontology?title=Samsung&ontology=organization,business%20enterprise,family%20business,public%20company,company
 With ontology option - return only true or false if the title contain in the given ontology
 Without the ontology option - return all the ontology chain found for the title
 
