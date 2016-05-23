@@ -805,409 +805,415 @@ dispatcher.onGet("/findontology", function(req, res) {
     		break;
 		}
 		
-		//call to extract the "instance of :P31" section using the Wikidata entity key
-		client.get("https://www.wikidata.org/w/api.php?action=wbgetentities&ids="+ entityKey +"&props=claims&languages=en&languagefallback=&sitefilter=azwiki&format=json", function (dataInner, response) {
-			//call the searchOntology function
-			
-			
-			//variables required by searchOntology
-			var entityID_list = new Array();
-			var hashtable = new HashTable();//declare a hashtable to store all those processed entityid
-			var hashtableStoreEntityWithUncompletedOntology = new HashTable();//store the root entity with uncompleted ontology tree path
-			var hashtableTreeNodes = new HashTable();//store the ontlogy relationship from the parent to kids entity
-			var tree = new TreeModel();//create the tree model
-			var node; //it is use to create a node in the tree
-			var parentNode; //it is use to retrieve the parent node of a tree
-			var P31_EntityID = new Array();//store the ontlogy relationship from the parent to kids entity
-			var hashtableEndEntityNodes = new HashTable();//store all the ending entity nodes/nodes without anymore children
-			var hashtableConsolidateUncompletedReferenceChildNode = new HashTable();//store all the entity id that is used by uncompleted nodes chains
-			
-			searchOntology(0);
-			function searchOntology(a){
-				//0 - read the P31:instance of section numeric-id keys
-				if (a == 0)
-				{
-					// console.log("enter a==0");
-					var p31_section = dataInner.entities;
-					p31_section = p31_section[entityKey].claims;
-					p31_section = p31_section['P31'];
-					
-					if (p31_section != null){
-						for(var i = 0; i < p31_section.length; i++) {
-							var obj = p31_section[i];
-							obj = obj.mainsnak.datavalue.value;
-							var entityID = JSON.stringify(obj['numeric-id']);
-							if (entityID.indexOf("Q") < 0){
-								entityID = "Q" + entityID;
-							}
-							entityID_list.push(entityID+","+entityID);
-							P31_EntityID.push(entityID);
-							hashtable.put(entityID,entityID);//add to track processed numeric id
-							//create a the P31 entity as root node
-							node = tree.parse({id: entityID});
-							hashtableTreeNodes.put(entityID,node);
-							
-						}
-						searchOntology(2);//call the next section
-					}else{
-						//no ontology found for this title
-						res.setHeader('Content-Type', 'application/json');
-						res.write(JSON.stringify(false));  
-						res.end();  
-					}
-					
-				}//end if i == 0
-				//read in the processed entity id file and add to the hashtable
-				else if (a == 1)
-				{
-					// console.log("enter a==1");
-					//check if file exists
-					var newEntityIDList = new Array();
-					fs.exists(fileToBeProcessedEntityID, function(exists) {
-					  	if(exists) {
-						    //rename the filePathEntity+"_tmp" file to the filePathEntity filename
-						    readFile(0);
-							function readFile(x){
-			    				if (x == 0){
-			    					fs.readFile(fileToBeProcessedEntityID, 'utf8', function(err, contentsEntity) {
-					    				var contentProcessedEntity = contentsEntity.toString().split('\n');
-					    				contentProcessedEntity = cleanArray(contentProcessedEntity);//remove empty string
-					    				for (var i=0;i<contentProcessedEntity.length;i++){
-					    					hashtable.put(contentProcessedEntity[i],contentProcessedEntity[i]);
-					    					newEntityIDList.push(contentProcessedEntity[i]);
-					    				}
-					    				entityID_list = newEntityIDList;
-					    				searchOntology(2);
-									});
-			    				}
-			    			}
-						}else{ //if the file does not exists proceed to nex section
-							searchOntology(3);//call the next section
-						}
-					});	
-
-				}//end if i == 1
-				//call to update the hashtable to track the processed numeric id
-				else if (a == 2)
-				{
-					// console.log("enter a==2");
-					removeFile(0);
-					//removed processed file if any
-					function removeFile(x){
-						if (x == 0){
-							fs.exists(fileToBeProcessedEntityID, function(exists) {
-							  	if(exists) {
-								    fs.unlink(fileToBeProcessedEntityID);
-								    removeFile(1); //exit this function
-								}else{ //if the file does not exists proceed to nex section
-									removeFile(1); //exit this function
+		//if this title contain a entity id
+		if (entityKey > -1){
+			//call to extract the "instance of :P31" section using the Wikidata entity key
+			client.get("https://www.wikidata.org/w/api.php?action=wbgetentities&ids="+ entityKey +"&props=claims&languages=en&languagefallback=&sitefilter=azwiki&format=json", function (dataInner, response) {
+				//call the searchOntology function
+				
+				
+				//variables required by searchOntology
+				var entityID_list = new Array();
+				var hashtable = new HashTable();//declare a hashtable to store all those processed entityid
+				var hashtableStoreEntityWithUncompletedOntology = new HashTable();//store the root entity with uncompleted ontology tree path
+				var hashtableTreeNodes = new HashTable();//store the ontlogy relationship from the parent to kids entity
+				var tree = new TreeModel();//create the tree model
+				var node; //it is use to create a node in the tree
+				var parentNode; //it is use to retrieve the parent node of a tree
+				var P31_EntityID = new Array();//store the ontlogy relationship from the parent to kids entity
+				var hashtableEndEntityNodes = new HashTable();//store all the ending entity nodes/nodes without anymore children
+				var hashtableConsolidateUncompletedReferenceChildNode = new HashTable();//store all the entity id that is used by uncompleted nodes chains
+				
+				searchOntology(0);
+				function searchOntology(a){
+					//0 - read the P31:instance of section numeric-id keys
+					if (a == 0)
+					{
+						// console.log("enter a==0");
+						var p31_section = dataInner.entities;
+						p31_section = p31_section[entityKey].claims;
+						p31_section = p31_section['P31'];
+						
+						if (p31_section != null){
+							for(var i = 0; i < p31_section.length; i++) {
+								var obj = p31_section[i];
+								obj = obj.mainsnak.datavalue.value;
+								var entityID = JSON.stringify(obj['numeric-id']);
+								if (entityID.indexOf("Q") < 0){
+									entityID = "Q" + entityID;
 								}
-							});	
+								entityID_list.push(entityID+","+entityID);
+								P31_EntityID.push(entityID);
+								hashtable.put(entityID,entityID);//add to track processed numeric id
+								//create a the P31 entity as root node
+								node = tree.parse({id: entityID});
+								hashtableTreeNodes.put(entityID,node);
+								
+							}
+							searchOntology(2);//call the next section
+						}else{
+							//no ontology found for this title
+							res.setHeader('Content-Type', 'application/json');
+							res.write(JSON.stringify(false));  
+							res.end();  
 						}
 						
-					}
-					
-					processEntityId(0);
-					function processEntityId(x){
-						if (x < entityID_list.length){
-							var entityIdKey = entityID_list[x].split(",")[0];
-							var rootEntityId = entityID_list[x].split(",")[1];
-			    			client.get("https://www.wikidata.org/w/api.php?action=wbgetentities&ids="+entityIdKey+"&props=labels|descriptions|claims&languages=en&languagefallback=&sitefilter=azwiki&format=json", function (data, response) {
-		    			
-			    				var label = data.entities;
-								var p279_section = label[entityIdKey].claims;
-								label = label[entityIdKey].labels;
-								label = label.en.value;
-								label = label.toLowerCase();
-								//update the hashtable with the labels
-								hashtable.put(entityIdKey,label);
-								
-								//writes this entity label to the ontology file
-								// writeLabelToFile(0)
-								// function writeLabelToFile(x){
-								// 	if (x ==0){
-								// 		fs.appendFile(fileOntologyResult, label + "\n", (err) => {
-				  		// 					if (err){ throw err;}
-				  		// 					else {writeLabelToFile(1);}
-								// 		});
-								// 	}
-								// }
-				    // 			;
-								
-								p279_section = p279_section['P279'];
-								try{
-									//loop the p279 section to retrieve all the entity id
-									for(var j = 0; j < p279_section.length; j++) {
-										var obj = p279_section[j];
-										try {
-							  				obj = obj.mainsnak.datavalue.value;
-											var entityID = JSON.stringify(obj['numeric-id']);
-										
-											if (entityID.indexOf("Q") < 0){
-												entityID = "Q" + entityID;
-											}
+					}//end if i == 0
+					//read in the processed entity id file and add to the hashtable
+					else if (a == 1)
+					{
+						// console.log("enter a==1");
+						//check if file exists
+						var newEntityIDList = new Array();
+						fs.exists(fileToBeProcessedEntityID, function(exists) {
+						  	if(exists) {
+							    //rename the filePathEntity+"_tmp" file to the filePathEntity filename
+							    readFile(0);
+								function readFile(x){
+				    				if (x == 0){
+				    					fs.readFile(fileToBeProcessedEntityID, 'utf8', function(err, contentsEntity) {
+						    				var contentProcessedEntity = contentsEntity.toString().split('\n');
+						    				contentProcessedEntity = cleanArray(contentProcessedEntity);//remove empty string
+						    				for (var i=0;i<contentProcessedEntity.length;i++){
+						    					hashtable.put(contentProcessedEntity[i],contentProcessedEntity[i]);
+						    					newEntityIDList.push(contentProcessedEntity[i]);
+						    				}
+						    				entityID_list = newEntityIDList;
+						    				searchOntology(2);
+										});
+				    				}
+				    			}
+							}else{ //if the file does not exists proceed to nex section
+								searchOntology(3);//call the next section
+							}
+						});	
+	
+					}//end if i == 1
+					//call to update the hashtable to track the processed numeric id
+					else if (a == 2)
+					{
+						// console.log("enter a==2");
+						removeFile(0);
+						//removed processed file if any
+						function removeFile(x){
+							if (x == 0){
+								fs.exists(fileToBeProcessedEntityID, function(exists) {
+								  	if(exists) {
+									    fs.unlink(fileToBeProcessedEntityID);
+									    removeFile(1); //exit this function
+									}else{ //if the file does not exists proceed to nex section
+										removeFile(1); //exit this function
+									}
+								});	
+							}
+							
+						}
+						
+						processEntityId(0);
+						function processEntityId(x){
+							if (x < entityID_list.length){
+								var entityIdKey = entityID_list[x].split(",")[0];
+								var rootEntityId = entityID_list[x].split(",")[1];
+				    			client.get("https://www.wikidata.org/w/api.php?action=wbgetentities&ids="+entityIdKey+"&props=labels|descriptions|claims&languages=en&languagefallback=&sitefilter=azwiki&format=json", function (data, response) {
+			    			
+				    				var label = data.entities;
+									var p279_section = label[entityIdKey].claims;
+									label = label[entityIdKey].labels;
+									label = label.en.value;
+									label = label.toLowerCase();
+									//update the hashtable with the labels
+									hashtable.put(entityIdKey,label);
+									
+									//writes this entity label to the ontology file
+									// writeLabelToFile(0)
+									// function writeLabelToFile(x){
+									// 	if (x ==0){
+									// 		fs.appendFile(fileOntologyResult, label + "\n", (err) => {
+					  		// 					if (err){ throw err;}
+					  		// 					else {writeLabelToFile(1);}
+									// 		});
+									// 	}
+									// }
+					    // 			;
+									
+									p279_section = p279_section['P279'];
+									try{
+										//loop the p279 section to retrieve all the entity id
+										for(var j = 0; j < p279_section.length; j++) {
+											var obj = p279_section[j];
+											try {
+								  				obj = obj.mainsnak.datavalue.value;
+												var entityID = JSON.stringify(obj['numeric-id']);
 											
-											//check whether the entityID is already processed
-											if (hashtable.get(entityID) == null){
-												writeEntityIDToFile(0);
-												function writeEntityIDToFile(x){
-													if (x == 0){
-														fs.appendFile(fileToBeProcessedEntityID , entityID+","+rootEntityId + "\n", (err) => {
-								  							if (err){ throw err;}
-								  							// else {
-								  							// 	writeLabelToFile(1);
-								  							// }
-														});
-													}
+												if (entityID.indexOf("Q") < 0){
+													entityID = "Q" + entityID;
 												}
-											}else{
-												hashtableConsolidateUncompletedReferenceChildNode.put(entityID,entityID);
 												
-												//add the last entity entry for entity
-												var hashtableLastParentEntityID;
-												var hashtableLastChildEntityID;
-												if (hashtableStoreEntityWithUncompletedOntology.get(rootEntityId) == null){
-													hashtableLastChildEntityID = new HashTable();
-													hashtableLastChildEntityID.put(entityID,entityID);
-													hashtableLastParentEntityID = new HashTable();
-													hashtableLastParentEntityID.put(entityIdKey,hashtableLastChildEntityID);
-													hashtableStoreEntityWithUncompletedOntology.put(rootEntityId,hashtableLastParentEntityID);
+												//check whether the entityID is already processed
+												if (hashtable.get(entityID) == null){
+													writeEntityIDToFile(0);
+													function writeEntityIDToFile(x){
+														if (x == 0){
+															fs.appendFile(fileToBeProcessedEntityID , entityID+","+rootEntityId + "\n", (err) => {
+									  							if (err){ throw err;}
+									  							// else {
+									  							// 	writeLabelToFile(1);
+									  							// }
+															});
+														}
+													}
 												}else{
-													hashtableLastParentEntityID = hashtableStoreEntityWithUncompletedOntology.get(rootEntityId);
-												
-													if (hashtableLastParentEntityID.get(entityIdKey) == null){
+													hashtableConsolidateUncompletedReferenceChildNode.put(entityID,entityID);
+													
+													//add the last entity entry for entity
+													var hashtableLastParentEntityID;
+													var hashtableLastChildEntityID;
+													if (hashtableStoreEntityWithUncompletedOntology.get(rootEntityId) == null){
 														hashtableLastChildEntityID = new HashTable();
 														hashtableLastChildEntityID.put(entityID,entityID);
+														hashtableLastParentEntityID = new HashTable();
 														hashtableLastParentEntityID.put(entityIdKey,hashtableLastChildEntityID);
 														hashtableStoreEntityWithUncompletedOntology.put(rootEntityId,hashtableLastParentEntityID);
 													}else{
-														//if parent is avaliable
-														hashtableLastChildEntityID = hashtableLastParentEntityID.get(entityIdKey);
-														hashtableLastChildEntityID.put(entityID,entityID);
-														hashtableLastParentEntityID.put(entityIdKey,hashtableLastChildEntityID);
-														hashtableStoreEntityWithUncompletedOntology.put(rootEntityId,hashtableLastParentEntityID);
+														hashtableLastParentEntityID = hashtableStoreEntityWithUncompletedOntology.get(rootEntityId);
+													
+														if (hashtableLastParentEntityID.get(entityIdKey) == null){
+															hashtableLastChildEntityID = new HashTable();
+															hashtableLastChildEntityID.put(entityID,entityID);
+															hashtableLastParentEntityID.put(entityIdKey,hashtableLastChildEntityID);
+															hashtableStoreEntityWithUncompletedOntology.put(rootEntityId,hashtableLastParentEntityID);
+														}else{
+															//if parent is avaliable
+															hashtableLastChildEntityID = hashtableLastParentEntityID.get(entityIdKey);
+															hashtableLastChildEntityID.put(entityID,entityID);
+															hashtableLastParentEntityID.put(entityIdKey,hashtableLastChildEntityID);
+															hashtableStoreEntityWithUncompletedOntology.put(rootEntityId,hashtableLastParentEntityID);
+														}
 													}
+													// console.log("root entity: "+rootEntityId+", parent entity: "+entityIdKey+", entityID: "+entityID + " is already processed.");	
 												}
-												// console.log("root entity: "+rootEntityId+", parent entity: "+entityIdKey+", entityID: "+entityID + " is already processed.");	
+										
+												node = tree.parse({id: entityID});//create the child node
+												parent = hashtableTreeNodes.get(rootEntityId).first(function (node) {
+											    	return node.model.id === entityIdKey;
+												});
+												parent.addChild(node);//add child to parent
+										
 											}
-									
-											node = tree.parse({id: entityID});//create the child node
-											parent = hashtableTreeNodes.get(rootEntityId).first(function (node) {
-										    	return node.model.id === entityIdKey;
-											});
-											parent.addChild(node);//add child to parent
-									
-										}
-										catch (e) {
-											console.log(e);
-											console.log("1. error recorded for: "+entityIdKey+":"+label);
-											hashtableEndEntityNodes.put(entityIdKey,entityIdKey);
-											//no more entity id can be found
-											//do nothing
-										}
-									}	
-								}//end try
-								catch (e)
-								{
-									console.log("2. error recorded for: "+entityIdKey+":"+label);
-									hashtableEndEntityNodes.put(entityIdKey,entityIdKey);
-									//do nothing as this entity id do not have any subclass of P279 section to be extracted
-								}//end catch
-								processEntityId(x+1);
-			    			});	
-						}else{
-							searchOntology(1);//call the next section	
+											catch (e) {
+												console.log(e);
+												console.log("1. error recorded for: "+entityIdKey+":"+label);
+												hashtableEndEntityNodes.put(entityIdKey,entityIdKey);
+												//no more entity id can be found
+												//do nothing
+											}
+										}	
+									}//end try
+									catch (e)
+									{
+										console.log("2. error recorded for: "+entityIdKey+":"+label);
+										hashtableEndEntityNodes.put(entityIdKey,entityIdKey);
+										//do nothing as this entity id do not have any subclass of P279 section to be extracted
+									}//end catch
+									processEntityId(x+1);
+				    			});	
+							}else{
+								searchOntology(1);//call the next section	
+							}
 						}
-					}
-				}//end if i == 2
-				
-				else if (a == 3)
-				{
-					//store the result in an array
-			  		var result_return = new Array();
-		
-			  		readTree(0);
-		  			function readTree(x){
-	    				if (x < P31_EntityID.length){
-	    					// console.log("Reading in " + P31_EntityID[x]);
-	    					var nodewalk = hashtableTreeNodes.get(P31_EntityID[x]);  
-	    					
-							// Using our async walk function...
-							asyncWalk(nodewalk).then(function (leafPromisesResult) {
-							  leafPromisesResult.forEach(function (leafPromiseResult) {
-							  	var string_result = "" + leafPromiseResult;
-							  	//console.log(string_result);
-							  	//string_result = string_result.split(",");
-							  	result_return.push(string_result);
-							  	
-							    // console.log("ordered results: " + leafPromiseResult);
-							  });
-							  readTree(x+1); //exit this function
-							  
-							});
-							
-							function longTask(node) {
-							  // Some long running task
-							  //console.log("Running long task on node " + node.model.id);
-							
-							  // Fake result
-							  return node.model.id+":"+hashtable.get(node.model.id);
-							}
-							
-							function asyncWalk(node) {
-							  var leafPromises = [];
-							  var promisesTemp = {};
-							
-							  node.walk(function (node) {
-							    var nodePromise;
-							    if (node.isRoot()) {
-							      nodePromise = Q.fcall(function () {
-							        return [longTask(node)];
-							      });
-							    } else {
-							      nodePromise = promisesTemp[node.parent.model.id].then(function (prevResult) {
-							        return prevResult.concat(longTask(node));
-							      });
-							    }
-							
-							    if (!node.hasChildren()) {
-							      leafPromises.push(nodePromise);
-							    } else {
-							      promisesTemp[node.model.id] = nodePromise;
-							    }
-							  });
-							
-							  return Q.all(leafPromises);
-							}
-	    				}else{
-	    					var newResult = new Array();
-	    					//loop thru all the string result and see if there is incompleted string
-	    					var resultChain;
-	    					var splited;
-	    					var last_entity_string;
-	    					var last_entity;
-	    					var ontologyRequestedFound = false;		
-	    							
-	    					checkForUnCompletedOntologyChain(0);
-	    					function checkForUnCompletedOntologyChain(x){
-	    						if (x < result_return.length){	
-	    							resultChain = result_return[x];
-	    							splited = resultChain.split(",");
-	    							last_entity_string = splited[splited.length-1];
-	    							last_entity = last_entity_string.split(":");
-	    							last_entity = last_entity[0];
-	    							if (hashtableEndEntityNodes.get(last_entity) == null){
-	    								scanForSubstring(0,last_entity_string, resultChain);
-	    								function scanForSubstring(d,last_entity_string, resultChain){
-	    									if (d<result_return.length){
-	    										if (x!=d){
-	    											//check if last_entity exists in any of the other string
-	    											//console.log("looking for "+last_entity_string +" in " + result_return[d] );
-		    										if(result_return[d].indexOf(last_entity_string) > -1){
-		    											var indexString = result_return[d].substring(result_return[d].indexOf(last_entity_string));
-		    											//if the extracted string is the same then we move to the next index
-		    											if (indexString== last_entity_string){
-		    												scanForSubstring(d+1, last_entity_string,resultChain);
-		    											}
-		    											//append to the resultChain
-		    											resultChain = resultChain.replace(last_entity_string,indexString);
-		    											
-		    											splited = resultChain.split(",");
-						    							var last_entity_string = splited[splited.length-1];
-						    							var last_entity = last_entity_string.split(":");
-						    							last_entity = last_entity[0];
-						    							if (hashtableEndEntityNodes.get(last_entity) == null){
-						    								scanForSubstring(0, last_entity_string,resultChain);
-						    							}else{
-						    								scanForSubstring(result_return.length, "", resultChain);	//exit the function
-						    							}
+					}//end if i == 2
+					
+					else if (a == 3)
+					{
+						//store the result in an array
+				  		var result_return = new Array();
+			
+				  		readTree(0);
+			  			function readTree(x){
+		    				if (x < P31_EntityID.length){
+		    					// console.log("Reading in " + P31_EntityID[x]);
+		    					var nodewalk = hashtableTreeNodes.get(P31_EntityID[x]);  
+		    					
+								// Using our async walk function...
+								asyncWalk(nodewalk).then(function (leafPromisesResult) {
+								  leafPromisesResult.forEach(function (leafPromiseResult) {
+								  	var string_result = "" + leafPromiseResult;
+								  	//console.log(string_result);
+								  	//string_result = string_result.split(",");
+								  	result_return.push(string_result);
+								  	
+								    // console.log("ordered results: " + leafPromiseResult);
+								  });
+								  readTree(x+1); //exit this function
+								  
+								});
+								
+								function longTask(node) {
+								  // Some long running task
+								  //console.log("Running long task on node " + node.model.id);
+								
+								  // Fake result
+								  return node.model.id+":"+hashtable.get(node.model.id);
+								}
+								
+								function asyncWalk(node) {
+								  var leafPromises = [];
+								  var promisesTemp = {};
+								
+								  node.walk(function (node) {
+								    var nodePromise;
+								    if (node.isRoot()) {
+								      nodePromise = Q.fcall(function () {
+								        return [longTask(node)];
+								      });
+								    } else {
+								      nodePromise = promisesTemp[node.parent.model.id].then(function (prevResult) {
+								        return prevResult.concat(longTask(node));
+								      });
+								    }
+								
+								    if (!node.hasChildren()) {
+								      leafPromises.push(nodePromise);
+								    } else {
+								      promisesTemp[node.model.id] = nodePromise;
+								    }
+								  });
+								
+								  return Q.all(leafPromises);
+								}
+		    				}else{
+		    					var newResult = new Array();
+		    					//loop thru all the string result and see if there is incompleted string
+		    					var resultChain;
+		    					var splited;
+		    					var last_entity_string;
+		    					var last_entity;
+		    					var ontologyRequestedFound = false;		
+		    							
+		    					checkForUnCompletedOntologyChain(0);
+		    					function checkForUnCompletedOntologyChain(x){
+		    						if (x < result_return.length){	
+		    							resultChain = result_return[x];
+		    							splited = resultChain.split(",");
+		    							last_entity_string = splited[splited.length-1];
+		    							last_entity = last_entity_string.split(":");
+		    							last_entity = last_entity[0];
+		    							if (hashtableEndEntityNodes.get(last_entity) == null){
+		    								scanForSubstring(0,last_entity_string, resultChain);
+		    								function scanForSubstring(d,last_entity_string, resultChain){
+		    									if (d<result_return.length){
+		    										if (x!=d){
+		    											//check if last_entity exists in any of the other string
+		    											//console.log("looking for "+last_entity_string +" in " + result_return[d] );
+			    										if(result_return[d].indexOf(last_entity_string) > -1){
+			    											var indexString = result_return[d].substring(result_return[d].indexOf(last_entity_string));
+			    											//if the extracted string is the same then we move to the next index
+			    											if (indexString== last_entity_string){
+			    												scanForSubstring(d+1, last_entity_string,resultChain);
+			    											}
+			    											//append to the resultChain
+			    											resultChain = resultChain.replace(last_entity_string,indexString);
+			    											
+			    											splited = resultChain.split(",");
+							    							var last_entity_string = splited[splited.length-1];
+							    							var last_entity = last_entity_string.split(":");
+							    							last_entity = last_entity[0];
+							    							if (hashtableEndEntityNodes.get(last_entity) == null){
+							    								scanForSubstring(0, last_entity_string,resultChain);
+							    							}else{
+							    								scanForSubstring(result_return.length, "", resultChain);	//exit the function
+							    							}
+			    										}
 		    										}
-	    										}
-	    										scanForSubstring(d+1, last_entity_string, resultChain);
-	    									}else{
-	    										//console.log(resultChain);
-	    										//check whether there is an ontology to match the result chain
-	    										if (ontologyToMatched != null){
-	    											ontologyRequestedFound = ontologyToFind(0,ontologyToMatched,resultChain);
-	    											 //if (resultChain.indexOf(ontologyToMatched) > -1){
-	    											 //	ontologyRequestedFound = true;
-	    											 //	checkForUnCompletedOntologyChain(99999);//exit the search as an ontology to match has been found
-	    											 //}
-	    										}
-	    										newResult.push(resultChain);
-	    										checkForUnCompletedOntologyChain(x+1);
-	    									}
-	    								}
-	    									
-    								}else{
-    									//console.log(resultChain);
-    									//check whether there is an ontology to match the result chain
-										if (ontologyToMatched != null){
-											ontologyRequestedFound = ontologyToFind(0,ontologyToMatched,resultChain);
-											 //if (resultChain.indexOf(ontologyToMatched) > -1){
-											 //	ontologyRequestedFound = true;
-											 //	checkForUnCompletedOntologyChain(99999);//exit the search as an ontology to match has been found
-											 //}
-										}
-    									//add the chain to the newResult array
-    									newResult.push(resultChain);
-    									checkForUnCompletedOntologyChain(x+1);
-    								}	
-    								
-	    							
-	    						}else{
-	    							console.log("Returned result in response.");
-	    							if (ontologyRequestedFound == true){
-	    								res.setHeader('Content-Type', 'application/json');
-    									res.write(JSON.stringify(true));  
-										res.end();  
-	    							}else{
-	    								res.setHeader('Content-Type', 'application/json');
-	    								if (ontologyToMatched != null){
-	    									res.write(JSON.stringify(false));  
+		    										scanForSubstring(d+1, last_entity_string, resultChain);
+		    									}else{
+		    										//console.log(resultChain);
+		    										//check whether there is an ontology to match the result chain
+		    										if (ontologyToMatched != null){
+		    											ontologyRequestedFound = ontologyToFind(0,ontologyToMatched,resultChain);
+		    											 //if (resultChain.indexOf(ontologyToMatched) > -1){
+		    											 //	ontologyRequestedFound = true;
+		    											 //	checkForUnCompletedOntologyChain(99999);//exit the search as an ontology to match has been found
+		    											 //}
+		    										}
+		    										newResult.push(resultChain);
+		    										checkForUnCompletedOntologyChain(x+1);
+		    									}
+		    								}
+		    									
 	    								}else{
-	    									res.write(JSON.stringify(newResult)); 
-	    								}
-										res.end();  
-	    							}
-			    					return;
-	    						}
-	    					}
-	    				}
-		  			}
-
-	    // 			removeFile(0);
-					// //removed processed file if any
-					// function removeFile(x){
-					// 	if (x == 0){
-					// 		fs.exists(fileOntologyResult, function(exists) {
-					// 		  	if(exists) {
-					// 			    fs.unlink(fileOntologyResult);
-					// 			    removeFile(1); //exit this function
-					// 			}else{ //if the file does not exists proceed to next section
-					// 				removeFile(1); //exit this function
-					// 			}
-					// 		});	
-					// 	}
-					// }
-	    			searchOntology(4);//exit the whole searchOntology function 
-					
-					
-					// //read in the ontology results and formulate a response 
-					// fs.exists(fileOntologyResult, function(exists) {
-					//   	if(exists) {
-					  		
-					// 	}else{ //if the file does not exists proceed to nex section
-					// 		searchOntology(4);//exit the whole searchOntology function 
-					// 	}
-					// });
-				}//end if i == 3
-			}
+	    									//console.log(resultChain);
+	    									//check whether there is an ontology to match the result chain
+											if (ontologyToMatched != null){
+												ontologyRequestedFound = ontologyToFind(0,ontologyToMatched,resultChain);
+												 //if (resultChain.indexOf(ontologyToMatched) > -1){
+												 //	ontologyRequestedFound = true;
+												 //	checkForUnCompletedOntologyChain(99999);//exit the search as an ontology to match has been found
+												 //}
+											}
+	    									//add the chain to the newResult array
+	    									newResult.push(resultChain);
+	    									checkForUnCompletedOntologyChain(x+1);
+	    								}	
+	    								
+		    							
+		    						}else{
+		    							console.log("Returned result in response.");
+		    							if (ontologyRequestedFound == true){
+		    								res.setHeader('Content-Type', 'application/json');
+	    									res.write(JSON.stringify(true));  
+											res.end();  
+		    							}else{
+		    								res.setHeader('Content-Type', 'application/json');
+		    								if (ontologyToMatched != null){
+		    									res.write(JSON.stringify(false));  
+		    								}else{
+		    									res.write(JSON.stringify(newResult)); 
+		    								}
+											res.end();  
+		    							}
+				    					return;
+		    						}
+		    					}
+		    				}
+			  			}
 	
-			return;
-
-		});
+		    // 			removeFile(0);
+						// //removed processed file if any
+						// function removeFile(x){
+						// 	if (x == 0){
+						// 		fs.exists(fileOntologyResult, function(exists) {
+						// 		  	if(exists) {
+						// 			    fs.unlink(fileOntologyResult);
+						// 			    removeFile(1); //exit this function
+						// 			}else{ //if the file does not exists proceed to next section
+						// 				removeFile(1); //exit this function
+						// 			}
+						// 		});	
+						// 	}
+						// }
+		    			searchOntology(4);//exit the whole searchOntology function 
+						
+						
+						// //read in the ontology results and formulate a response 
+						// fs.exists(fileOntologyResult, function(exists) {
+						//   	if(exists) {
+						  		
+						// 	}else{ //if the file does not exists proceed to nex section
+						// 		searchOntology(4);//exit the whole searchOntology function 
+						// 	}
+						// });
+					}//end if i == 3
+				}
 		
+				return;
+	
+			});
+		}else{
+				res.setHeader('Content-Type', 'application/json');
+				res.write(JSON.stringify(false));  
+				res.end();  
+		}
 		
 	});
 	
