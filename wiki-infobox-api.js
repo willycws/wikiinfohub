@@ -804,9 +804,8 @@ dispatcher.onGet("/findontology", function(req, res) {
     		entityKey = key;
     		break;
 		}
-		
 		//if this title contain a entity id
-		if (entityKey > -1){
+		if (entityKey != "-1"){
 			//call to extract the "instance of :P31" section using the Wikidata entity key
 			client.get("https://www.wikidata.org/w/api.php?action=wbgetentities&ids="+ entityKey +"&props=claims&languages=en&languagefallback=&sitefilter=azwiki&format=json", function (dataInner, response) {
 				//call the searchOntology function
