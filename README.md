@@ -2,10 +2,10 @@
 
 This is an NodeJs and npm project that extract the Wikipedia Infobox section into an JSON format. It is wrap as a web service call for any GET request from browser or application. You can test this API at https://wikiinfohub.herokuapp.com/wikiinfobox?title=iPhone%206&language=en
 
-#####With ontology option - return only true or false if the title contain in the given ontology
+#######With ontology option - return only true or false if the title contain in the given ontology
 https://wikiinfohub.herokuapp.com/findontology?title=Samsung&ontology=organization,business%20enterprise,family%20business,public%20company,company
 
-#####Without the ontology option - return all the ontology chain found for the title
+#######Without the ontology option - return all the ontology chain found for the title
 https://wikiinfohub.herokuapp.com/findontology?title=Samsung
 
 #####Setup Nodejs and npm
