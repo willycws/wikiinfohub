@@ -9,7 +9,7 @@ https://wikiinfohub.herokuapp.com/findontology?title=Samsung&ontology=organizati
 
 ######With ontology option with ambiguity option - return only true or false if the title contain in the given ontology
 Sometimes we encounter names that may refer to other entities example "Apple" could be a fruit or a technology company. By adding the option ambiguity=true, the API will further search into any ambiguity related to "Apple". If the option is not made avaliable, ambiguity option will be by default false. (**Searching ambiguity will take additional time)
-https://wikiinfohub.herokuapp.com/findontology?title=Apple&ontology=organization,business%20enterprise,family%20business,public%20company,company&ambiguity=false
+https://wikiinfohub.herokuapp.com/findontology?title=Apple&ontology=organization,business%20enterprise,family%20business,public%20company,company&ambiguity=false<br>
 https://wikiinfohub.herokuapp.com/findontology?title=Apple&ontology=organization,business%20enterprise,family%20business,public%20company,company&ambiguity=true
 
 ######Without the ontology option - return all the ontology chain found for the title
