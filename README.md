@@ -9,8 +9,8 @@ https://wikiinfohub.herokuapp.com/lexical?title=apple will give you noun and adj
 <br>
 https://wikiinfohub.herokuapp.com/lexical?title=apple&lexicaltomatched=noun,adjective will return "true" as it matched one of the criteria in the lexicaltomatched parameter. If it does not match any of the lexicaltomatched values, it will return false
 <br><br>
-https://wikiinfohub.herokuapp.com/lexical?title=Beckham&lexicaltomatched=noun,adjective or<br>
-https://wikiinfohub.herokuapp.com/lexical?title=Beckham will return "No POS can be found" message as it is not an official English dictionary word.
+https://wikiinfohub.herokuapp.com/lexical?title=beckham&lexicaltomatched=noun,adjective or<br>
+https://wikiinfohub.herokuapp.com/lexical?title=beckham will return "No POS can be found" message as it is not an official English dictionary word.
 
 ######With ontology option - return only true or false if the title contain in the given ontology
 https://wikiinfohub.herokuapp.com/findontology?title=Samsung&ontology=organization,business%20enterprise,family%20business,public%20company,company
