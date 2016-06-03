@@ -7,8 +7,8 @@ Drop me an email millenniummidis_sg[at]yahoo.com if you need a copy of the sourc
 ######Find out the Part-of-Speech type for a word (case sensitive)
 https://wikiinfohub.herokuapp.com/lexical?title=apple will give you noun and adjective
 <br>
-https://wikiinfohub.herokuapp.com/lexical?title=banana&lexicaltomatched=noun,adjective will return "true" as it matched one of the criteria in the lexicaltomatched parameter. If it does not match any of the lexicaltomatched values, it will return false
-<br>
+https://wikiinfohub.herokuapp.com/lexical?title=apple&lexicaltomatched=noun,adjective will return "true" as it matched one of the criteria in the lexicaltomatched parameter. If it does not match any of the lexicaltomatched values, it will return false
+<br><br>
 https://wikiinfohub.herokuapp.com/lexical?title=Beckham&lexicaltomatched=noun,adjective or<br>
 https://wikiinfohub.herokuapp.com/lexical?title=Beckham will return "No POS can be found" message as it is not an official English dictionary word.
 
